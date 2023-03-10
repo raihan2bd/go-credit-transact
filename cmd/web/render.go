@@ -9,22 +9,22 @@ import (
 )
 
 type templateData struct {
-	StringMap  map[string]string
-	IntMap     map[string]int
-	FloatMap   map[string]float32
-	Data       map[string]interface{}
-	CSRFToken  string
-	Flash      string
-	Warning    string
-	Error      string
-	API        string
-	CSSVersion string
+	StringMap       map[string]string
+	IntMap          map[string]int
+	FloatMap        map[string]float32
+	Data            map[string]interface{}
+	CSRFToken       string
+	Flash           string
+	Warning         string
+	Error           string
+	IsAuthenticated int
+	API             string
+	CSSVersion      string
 }
 
 var functions = template.FuncMap{}
 
 //go:embed templates
-
 var templateFS embed.FS
 
 func (app *application) addDefaultData(td *templateData, r *http.Request) *templateData {
@@ -34,7 +34,7 @@ func (app *application) addDefaultData(td *templateData, r *http.Request) *templ
 func (app *application) renderTemplate(w http.ResponseWriter, r *http.Request, page string, td *templateData, partials ...string) error {
 	var t *template.Template
 	var err error
-	templateToRender := fmt.Sprintf("/templates/%s.page.html", page)
+	templateToRender := fmt.Sprintf("templates/%s.page.html", page)
 
 	_, templateInMap := app.templateCache[templateToRender]
 
@@ -42,14 +42,13 @@ func (app *application) renderTemplate(w http.ResponseWriter, r *http.Request, p
 		t = app.templateCache[templateToRender]
 	} else {
 		t, err = app.parseTemplate(partials, page, templateToRender)
-
 		if err != nil {
 			app.errorLog.Println(err)
 			return err
 		}
 	}
 
-	if td != nil {
+	if td == nil {
 		td = &templateData{}
 	}
 
@@ -62,10 +61,9 @@ func (app *application) renderTemplate(w http.ResponseWriter, r *http.Request, p
 	}
 
 	return nil
-
 }
 
-func (app *application) parseTemplate(partials []string, page string, templateToRender string) (*template.Template, error) {
+func (app *application) parseTemplate(partials []string, page, templateToRender string) (*template.Template, error) {
 	var t *template.Template
 	var err error
 
@@ -81,7 +79,6 @@ func (app *application) parseTemplate(partials []string, page string, templateTo
 	} else {
 		t, err = template.New(fmt.Sprintf("%s.page.html", page)).Funcs(functions).ParseFS(templateFS, "templates/base.layout.html", templateToRender)
 	}
-
 	if err != nil {
 		app.errorLog.Println(err)
 		return nil, err
