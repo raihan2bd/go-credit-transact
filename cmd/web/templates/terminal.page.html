@@ -41,10 +41,10 @@
   <div class="mb-3">
     <label for="cardholder-email" class="form-label">Cardholder Email</label>
     <input
-      type="text"
+      type="email"
       class="form-control"
       id="cardholder-email"
-      name="cardholder_email"
+      name="email"
       required=""
       autocomplete="cardholder-email-new"
     />
@@ -178,7 +178,7 @@
                     result.paymentIntent.currency;
                   processing.classList.add('d-none');
                   showCardSuccess();
-                  // would submit the form
+                  document.getElementById("charge_form").submit();
                 }
               }
             });
