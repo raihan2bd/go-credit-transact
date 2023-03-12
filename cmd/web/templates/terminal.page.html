@@ -1,111 +1,168 @@
-{{template "base" .}}
+{{template "base" .}} {{define "title"}} Virtual Terminal {{end}} {{define
+"content"}}
+<h2 class="mt-3 text-center">Virtual Terminal</h2>
+<hr />
 
-{{define "title"}}
-  Virtual Terminal
-{{end}}
+<div class="alert alert-danger text-center d-none" id="card-messages"></div>
 
-{{define "content"}}
-  <h2 class="mt-3 text-center">Virtual Terminal</h2>
-  <hr>
+<form
+  action="/payment-succeeded"
+  method="post"
+  name="charge_form"
+  id="charge_form"
+  class="d-block need-validation charge-form"
+  autocomplete="off"
+  novalidate
+>
+  <div class="mb-3">
+    <label for="amount" class="form-label">Amount</label>
+    <input
+      type="text"
+      class="form-control"
+      id="amount"
+      name="amount"
+      required=""
+      autocomplete="amount-new"
+    />
+  </div>
 
-  <div class="alert alert-danger text-center d-none" id="card-messages"></div>
+  <div class="mb-3">
+    <label for="cardholder-name" class="form-label">Cardholder Name</label>
+    <input
+      type="text"
+      class="form-control"
+      id="cardholder-name"
+      name="cardholder_name"
+      required=""
+      autocomplete="cardholder-name-new"
+    />
+  </div>
 
-  <form action="/payment-succeeded" method="post" 
-    name="charge_form" id="charge_form"
-    class="d-block need-validation charge-form"
-    autocomplete="off" novalidate>
+  <div class="mb-3">
+    <label for="cardholder-email" class="form-label">Cardholder Email</label>
+    <input
+      type="text"
+      class="form-control"
+      id="cardholder-email"
+      name="cardholder_email"
+      required=""
+      autocomplete="cardholder-email-new"
+    />
+  </div>
 
-    <div class="mb-3">
-      <label for="amount" class="form-label">Amount</label>
-      <input type="text" class="form-control" id="amount" name="amount" required="" autocomplete="amount-new" />
+  <div class="mb-3">
+    <label for="card-element" class="form-label">Credit Card</label>
+    <div id="card-element" class="form-control"></div>
+    <div class="alert-danger text-center" id="card-errors" role="alert"></div>
+    <div class="alert-success text-center" id="card-success" role="alert"></div>
+  </div>
+  <hr />
+  <a
+    id="pay-button"
+    href="javascript:void(0)"
+    class="btn btn-primary"
+    onclick="val()"
+    >Charge Card</a
+  >
+  <div id="processing-payment" class="text-center d-none">
+    <div class="spinner-border text-primary" role="status">
+      <span class="visually-hidden">Loading ...</span>
     </div>
+  </div>
 
-    <div class="mb-3">
-      <label for="cardholder-name" class="form-label">Cardholder Name</label>
-      <input type="text" class="form-control" id="cardholder-name" name="cardholder_name" required="" autocomplete="cardholder-name-new" />
-    </div>
+  <input type="hidden" name="payment_intent" id="payment_intent" />
+  <input type="hidden" name="payment_method" id="payment_method" />
+  <input type="hidden" name="payment_amount" id="payment_amount" />
+  <input type="hidden" name="payment_currency" id="payment_curreny" />
+</form>
 
-    <div class="mb-3">
-      <label for="cardholder-email" class="form-label">Cardholder Email</label>
-      <input type="text" class="form-control" id="cardholder-email" name="cardholder_email" required="" autocomplete="cardholder-email-new" />
-    </div>
+{{end}} {{define "js"}}
+<script src="https://js.stripe.com/v3/"></script>
+<script>
+  let card;
+  let stripe;
 
-    <div class="mb-3">
-      <label for="card-element" class="form-label">Credit Card</label>
-      <div id="card-element" class="form-control"></div>
-      <div class="alert-danger text-center" id="card-errors" role="alert"></div>
-      <div class="alert-success text-center" id="card-success" role="alert"></div>
-    </div>
-    <hr>
-    <a id="pay-button" href="javascript:void(0)" class="btn btn-primary" onclick="val()">Charge Card</a>
-    <div id="processing-payment" class="text-center d-none">
-      <div class="spinner-border text-primary" role="status">
-        <span class="visually-hidden">Loading ...</span>
-      </div>
-    </div>
-  </form>
+  stripe = Stripe('pk_test_51Mk5OTGpJDSmblx3b28JSQwuCBRlTStozQgatWHyb8NCMOfIhDUuAmItJaqPKv0iaWOwPF93jcjWXelSPDGZQRns00xk2YgmXl')
 
-{{end}}
+  // client side validation
+  const cardMessages = document.getElementById("card-messages");
+  const payButton = document.getElementById("pay-button");
+  const processing = document.getElementById("processing-payment");
 
-{{define "js"}}
-  <script src="https://js.stripe.com/v3/"></script>
-  <script>
-    let card;
-    let stripe;
-
-    stripe = Stripe('pk_test_51Mk5OTGpJDSmblx3b28JSQwuCBRlTStozQgatWHyb8NCMOfIhDUuAmItJaqPKv0iaWOwPF93jcjWXelSPDGZQRns00xk2YgmXl')
-    
-    // client side validation
-    const cardMessages = document.getElementById("card-messages");
-    const payButton = document.getElementById("pay-button");
-    const processing = document.getElementById("processing-payment");
-
-    // Hide pay button
-    function hidePayButton () {
-      payButton.classList.add('d-none');
-      processing.classList.remove('d-none');
-    }
-    function val() {
-      let form = document.getElementById('charge_form');
-      if (form.checkValidity() === false) {
-        this.event.preventDefault();
-        this.event.stopPropagation();
-        form.classList.add("was-validated");
-        return;
-      }
+  // Hide pay button
+  function hidePayButton () {
+    payButton.classList.add('d-none');
+    processing.classList.remove('d-none');
+  }
+  function val() {
+    let form = document.getElementById('charge_form');
+    if (form.checkValidity() === false) {
+      this.event.preventDefault();
+      this.event.stopPropagation();
       form.classList.add("was-validated");
-      hidePayButton();
+      return;
     }
+    form.classList.add("was-validated");
+    hidePayButton();
 
-    (function() {
-      // crete stripe & elements
-      const elements = stripe.elements();
-      const style = {
-        base: {
-          fontSize: '16px',
-          lineHeigth: '24px'
-        }
+    let amountToCharge = String(parseFloat(document.getElementById("amount").value) * 100)
+
+      let payload = {
+          amount: amountToCharge,
+          currency: 'cad',
+      }
+
+      const requestOptions = {
+          method: 'post',
+          headers: {
+              'Accept': 'application/json',
+              'Content-Type': 'application/json'
+          },
+          body: JSON.stringify(payload),
+      }
+
+      fetch("http://localhost:4001/api/payment-intent", requestOptions)
+          .then(response => response.text())
+          .then(response => {
+              let data;
+              try {
+                  data = JSON.parse(response);
+                  console.log(data);
+              } catch (err) {
+                  console.log(err);
+              }
+          })
+  }
+
+  (function() {
+    // crete stripe & elements
+    const elements = stripe.elements();
+    const style = {
+      base: {
+        fontSize: '16px',
+        lineHeigth: '24px'
+      }
+    };
+
+    // create card entry
+    card = elements.create('card', {
+      style: style,
+      hidePostalCode: true
+    });
+
+    card.mount("#card-element");
+
+    // check for input errors
+    card.addEventListener("change", function(event) {
+      var displayError = document.getElementById("card-errors");
+      if(event.error) {
+        displayError.classList.remove('d-none');
+        displayError.textContent = event.error.message;
+      } else {
+        displayError.classList.add('d-none');
+        displayError.textContent = '';
       };
-
-      // create card entry
-      card = elements.create('card', {
-        style: style,
-        hidePostalCode: true
-      });
-
-      card.mount("#card-element");
-
-      // check for input errors
-      card.addEventListener("change", function(event) {
-        var displayError = document.getElementById("card-errors");
-        if(event.error) {
-          displayError.classList.remove('d-none');
-          displayError.textContent = event.error.message;
-        } else {
-          displayError.classList.add('d-none');
-          displayError.textContent = '';
-        };
-      });
-    })();
-  </script>
+    });
+  })();
+</script>
 {{end}}
