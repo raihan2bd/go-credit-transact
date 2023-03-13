@@ -82,9 +82,7 @@
   let card;
   let stripe;
 
-  stripe = Stripe(
-    'pk_test_51Mk5OTGpJDSmblx3b28JSQwuCBRlTStozQgatWHyb8NCMOfIhDUuAmItJaqPKv0iaWOwPF93jcjWXelSPDGZQRns00xk2YgmXl'
-  );
+  stripe = Stripe('{{index .StringMap "publishable_key"}}');
 
   // client side validation
   const cardMessages = document.getElementById('card-messages');
@@ -145,7 +143,7 @@
       body: JSON.stringify(payload),
     };
 
-    fetch('http://localhost:4001/api/payment-intent', requestOptions)
+    fetch('{{.API}}/api/payment-intent', requestOptions)
       .then((response) => response.text())
       .then((response) => {
         let data;
