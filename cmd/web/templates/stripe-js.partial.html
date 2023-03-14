@@ -4,7 +4,7 @@
   let card;
   let stripe;
 
-  stripe = Stripe('{{index .StringMap "publishable_key"}}');
+  stripe = Stripe('{{.StripePublishableKey}}');
 
   // client side validation
   const cardMessages = document.getElementById('card-messages');

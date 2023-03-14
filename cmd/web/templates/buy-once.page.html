@@ -23,8 +23,10 @@
 >
 
   <input type="hidden" name="product_id" value="{{$widget.ID}}" />
-  <input type="hidden" name="amount" value="{{$widget.Price}}" />
-  <h3 class="text-center mt-2 mb-3">{{$widget.Name}}: {{$widget.Price}}</h3>
+  <input type="hidden" id="amount" name="amount" value="{{$widget.Price}}" />
+
+  <!--display widget info-->
+  <h3 class="text-center mt-2 mb-3">{{$widget.Name}}: {{formatCurrency $widget.Price}}</h3>
   <p>{{$widget.Description}}</p>
   <hr>
   <div class="mb-3">
