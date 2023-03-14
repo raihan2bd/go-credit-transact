@@ -1,6 +1,7 @@
 package models
 
 import (
+	"context"
 	"database/sql"
 	"time"
 )
@@ -31,4 +32,22 @@ type Widget struct {
 	Price          int       `json:"price"`
 	CreatedAt      time.Time `json:"created_at"`
 	UpdatedAt      time.Time `json:"updated_at"`
+}
+
+// GetWidget will get widget by id.
+func (m *DBModel) GetWidget(id int) (Widget, error) {
+	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+	defer cancel()
+
+	var widget Widget
+
+	row := m.DB.QueryRowContext(ctx, "select id, name from widgets where id = ?", id)
+
+	err := row.Scan(&widget.ID, &widget.Name)
+	if err != nil {
+		return widget, nil
+	}
+
+	return widget, nil
+
 }
