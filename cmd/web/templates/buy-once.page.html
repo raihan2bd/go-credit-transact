@@ -1,5 +1,7 @@
-{{template "base" .}} {{define "title"}} Buy one Widget {{end}} {{define
-"content"}}
+{{template "base" .}} {{define "title"}} Buy one Widget {{end}} {{define "content"}}
+
+{{$widget := index .Data "widget"}}
+
 <h2 class="mt-3 text-center">Buy One Widget</h2>
 <hr />
 <img
@@ -19,18 +21,12 @@
   autocomplete="off"
   novalidate
 >
-  <div class="mb-3">
-    <label for="amount" class="form-label">Amount</label>
-    <input
-      type="text"
-      class="form-control"
-      id="amount"
-      name="amount"
-      required=""
-      autocomplete="amount-new"
-    />
-  </div>
 
+  <input type="hidden" name="product_id" value="{{$widget.ID}}" />
+  <input type="hidden" name="amount" value="{{$widget.Price}}" />
+  <h3 class="text-center mt-2 mb-3">{{$widget.Name}}: {{$widget.Price}}</h3>
+  <p>{{$widget.Description}}</p>
+  <hr>
   <div class="mb-3">
     <label for="cardholder-name" class="form-label">Cardholder Name</label>
     <input
