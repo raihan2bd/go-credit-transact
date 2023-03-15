@@ -87,7 +87,7 @@
                 if (result.paymentIntent.status === 'succeeded') {
                   // we have charged the card
                   document.getElementById('payment_method').value =
-                    result.paymentIntent.payment_method_types[0];
+                    result.paymentIntent.payment_method;
                   document.getElementById('payment_intent').value =
                     result.paymentIntent.id;
                   document.getElementById('payment_amount').value =
