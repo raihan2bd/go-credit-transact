@@ -15,14 +15,14 @@
   novalidate
 >
   <div class="mb-3">
-    <label for="amount" class="form-label">Amount</label>
+    <label for="charge_amount" class="form-label">Amount</label>
     <input
       type="text"
       class="form-control"
-      id="amount"
-      name="amount"
+      id="charge_amount"
+      name="charge_amount"
       required=""
-      autocomplete="amount-new"
+      autocomplete="charge_amount-new"
     />
   </div>
 
@@ -74,8 +74,18 @@
   <input type="hidden" name="payment_method" id="payment_method" />
   <input type="hidden" name="payment_amount" id="payment_amount" />
   <input type="hidden" name="payment_currency" id="payment_currency" />
+  <input type="hidden" name="amount" id="amount" />
 </form>
 
 {{end}} {{define "js"}}
+  <script>
+    document.getElementById('charge_amount', function(event) {
+      if (event.target.value !== "") {
+        document.getElementById("amount").value = event.target.value * 100;
+      } else {
+        document.getElementById("amount").value = 0;
+      }
+    })
+  </script>
 {{template "stripe-js" .}}
 {{end}}
