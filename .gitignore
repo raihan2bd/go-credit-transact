@@ -2,3 +2,4 @@ Makefile
 .env
 dist/
 tmp/
+database.yml

@@ -1,0 +1,7 @@
+development:
+  dialect: mysql
+  database: widgets
+  user: your database user name
+  password: place your password
+  host: 127.0.0.1
+  pool: 5
