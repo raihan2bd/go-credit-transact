@@ -1,0 +1,72 @@
+{{template "base" .}}
+
+{{define "title"}}
+    Login
+{{end}}
+
+{{define "content"}}
+<div class="row">
+<div class="col-md-6 offset-md-3">
+    <form action="" method="post"
+    name="login_form" id="login_form"
+    class="d-block needs-validation charge-form"
+    autocomplete="off" novalidate="">
+
+    <h2 class="mt-2 text-center mb-3">Login</h2>
+    <hr>
+
+    <div class="mb-3">
+        <label for="email" class="form-label">Email</label>
+        <input type="email" class="form-control" id="email" name="email"
+            required="" autocomplete="email-new">
+    </div>
+
+    <div class="mb-3">
+        <label for="password" class="form-label">Password</label>
+        <input type="password" class="form-control" id="password" name="password"
+            required="" autocomplete="password-new">
+    </div>
+
+    <hr>
+
+    <a href="javascript:void(0)" class="btn btn-primary" onclick="val()">Login</a>
+
+</form>
+</div>
+</div>
+{{end}}
+
+{{define "js"}}
+<script>
+function val() {
+    let form = document.getElementById("login_form");
+    if (form.checkValidity() === false) {
+        this.event.preventDefault();
+        this.event.stopPropagation();
+        form.classList.add("was-validated");
+        return;
+    }
+    form.classList.add("was-validated");
+
+    let payload = {
+        email: document.getElementById("email").value,
+        password: document.getElementById("password").value,
+    }
+
+    const requestOptions = {
+        method: 'post',
+        headers: {
+            'Accept': 'application/json',
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(payload),
+    }
+
+    fetch("{{.API}}/api/authenticate", requestOptions)
+    .then(response => response.json())
+    .then(response => {
+        console.log(response);
+    })
+}
+</script>
+{{end}}
