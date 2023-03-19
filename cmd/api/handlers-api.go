@@ -3,9 +3,11 @@ package main
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"net/http"
 	"strconv"
+	"strings"
 	"time"
 
 	"github.com/raihan2bd/go-credit-transact/internal/cards"
@@ -301,8 +303,28 @@ func (app *application) CreateAuthToken(w http.ResponseWriter, r *http.Request) 
 }
 
 func (app *application) authenticateToken(r *http.Request) (*models.User, error) {
-	var u models.User
-	return &u, nil
+	authorizationHeader := r.Header.Get("Authorization")
+	if authorizationHeader == "" {
+		return nil, errors.New("no authorization header received")
+	}
+
+	headerParts := strings.Split(authorizationHeader, " ")
+	if len(headerParts) != 2 || headerParts[0] != "Bearer" {
+		return nil, errors.New("no authorization header received")
+	}
+
+	token := headerParts[1]
+	if len(token) != 26 {
+		return nil, errors.New("invalid authentication token")
+	}
+
+	// get the user from the tokens table
+	user, err := app.DB.GetUserForToken(token)
+	if err != nil {
+		return nil, errors.New("invalid authentication token")
+	}
+
+	return user, nil
 }
 
 func (app *application) CheckAuthentication(w http.ResponseWriter, r *http.Request) {
