@@ -5,55 +5,118 @@
     <!-- Required meta tags -->
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-
-    <!-- Bootstrap CSS -->
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-EVSTQN3/azprG1Anm3QDgpJLIm9Nao0Yz1ztcQTwFspd3yD65VohhpuuCOmLASjC" crossorigin="anonymous">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.1/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-+0n0xVW2eSR5OomGNYDnhzAbDsOXxcvSN1TPprVMTNDbiYZCxYbOOl7+AMvyTG2x" crossorigin="anonymous">
 
     <title>
-      {{block "title" .}}
-      {{end}}
+    {{block "title" .}}
+
+    {{end}}
     </title>
   </head>
   <body>
 
-    <nav class="navbar navbar-expand-lg bg-body-tertiary">
-      <div class="container-fluid">
-        <a class="navbar-brand" href="#">&nbsp;</a>
-        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
-          <span class="navbar-toggler-icon"></span>
-        </button>
-        <div class="collapse navbar-collapse" id="navbarSupportedContent">
-          <ul class="navbar-nav me-auto mb-2 mb-lg-0">
-            <li class="nav-item">
-              <a class="nav-link active" aria-current="page" href="/">Home</a>
-            </li>
-            <li class="nav-item">
-              <a class="nav-link" href="/virtual-terminal">Virtual Terminal</a>
-            </li>
-            <li class="nav-item dropdown">
-              <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
-               Products
-              </a>
-              <ul class="dropdown-menu">
-                <li><a class="dropdown-item" href="/widget/1">Buy one widget</a></li>
-                <li><a class="dropdown-item" href="/plans/bronze">Subscription</a></li>
-              </ul>
-            </li>
-          </ul>
-        </div>
-      </div>
-    </nav><!--end of nav bar-->
+  <nav class="navbar navbar-expand-lg navbar-light bg-light">
+    <div class="container-fluid">
+      <a class="navbar-brand" href="#">&nbsp;</a>
+      <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+        <span class="navbar-toggler-icon"></span>
+      </button>
+      <div class="collapse navbar-collapse" id="navbarSupportedContent">
+        <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+          <li class="nav-item">
+            <a class="nav-link active" aria-current="page" href="/">Home</a>
+          </li>
+          
+          <li class="nav-item dropdown">
+            <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+              Products
+            </a>
+            <ul class="dropdown-menu" aria-labelledby="navbarDropdown">
+              <li><a class="dropdown-item" href="/widget/1">Buy one widget</a></li>
+              <li><a class="dropdown-item" href="/plans/bronze">Subscription</a></li>
+            </ul>
+          </li>
 
-    <div class="container">
-      <div class="row">
-        <div class="col">
-          {{block "content" .}}{{end}}
-        </div>
+          <li id="vt-link" class="nav-item d-none">
+            <a class="nav-link" href="/virtual-terminal">Virtual Terminal</a>
+          </li>
+
+        </ul>
+
+        <ul class="navbar-nav ms-auto mb-2 mb-lg-0">
+          <li id="login-link" class="nav-item d-none">
+            <a class="nav-link" href="/login">Login</a></li>
+          </li>
+        </ul>
       </div>
     </div>
-    <!-- Js section -->
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.bundle.min.js" integrity="sha384-MrcW6ZMFYlzcLA8Nl+NtUVF0sA7MsXsP1UyJoMp4YLEuNSfAP+JcXn/tWtIaxVXM" crossorigin="anonymous"></script>
-    {{block "js" .}} {{end}}
+  </nav>
+
+    <div class="container">
+        <div class="row">
+            <div class="col">
+                {{block "content" .}} {{end}}
+            </div>
+        </div>
+    </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.1/dist/js/bootstrap.bundle.min.js" integrity="sha384-gtEjrD/SeCtmISkJkNUaaKMoLD0//ElJ19smozuHV6z3Iehds+3Ulb9Bn9Plx0x4" crossorigin="anonymous"></script>
+
+  <script>
+  let loginLink = document.getElementById("login-link");
+  let vtLink = document.getElementById("vt-link");
+
+  document.addEventListener("DOMContentLoaded", function() {
+    if (localStorage.getItem("token") !== null) {
+      loginLink.innerHTML = '<a class="nav-link" onclick="logout()" href="#!">Logout</a>';
+      vtLink.classList.remove("d-none");
+    } else {
+      loginLink.innerHTML = '<a class="nav-link" href="/login">Login</a>';
+    }
+    loginLink.classList.remove("d-none");
+  })
+
+  function logout() {
+    localStorage.removeItem("token");
+    localStorage.removeItem("token_expiry");
+    location.href = "/login";
+  }
+
+  function checkAuth() {
+    if (localStorage.getItem("token") === null) {
+      location.href = "/login";
+      return;
+    } else {
+      let token = localStorage.getItem("token");
+      const myHeaders = new Headers();
+      myHeaders.append("Content-Type", "application/json");
+      myHeaders.append("Authorization", "Bearer " + token);
+
+      const requestOptions = {
+        method: "POST",
+        headers: myHeaders,
+      }
+
+      fetch("{{.API}}/api/is-authenticated", requestOptions)
+      .then(response => response.json())
+      .then(function(data){
+        if (data.error === true) {
+          console.log("not logged in");
+          location.href = "/login";
+        } else {
+          console.log("Logged in");
+        }
+      })
+    }
+  }
+  </script>
+  {{block "js" .}}
+
+  {{end}}
+
   </body>
+    
 </html>
+
+
 {{end}}
