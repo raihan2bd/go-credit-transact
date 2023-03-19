@@ -1,4 +1,3 @@
-// github.com/raihan2bd/go-credit-transact
 package main
 
 import (
@@ -257,20 +256,22 @@ func (app *application) CreateAuthToken(w http.ResponseWriter, r *http.Request) 
 		return
 	}
 
+	// get the user from the database by email; send error if invalid email
 	user, err := app.DB.GetUserByEmail(userInput.Email)
 	if err != nil {
-		_ = app.invalidCredentials(w)
+		app.invalidCredentials(w)
 		return
 	}
 
+	// validate the password; send error if invalid password
 	validPassword, err := app.passwordMatches(user.Password, userInput.Password)
 	if err != nil {
-		_ = app.invalidCredentials(w)
+		app.invalidCredentials(w)
 		return
 	}
 
 	if !validPassword {
-		_ = app.invalidCredentials(w)
+		app.invalidCredentials(w)
 		return
 	}
 
@@ -315,32 +316,95 @@ func (app *application) authenticateToken(r *http.Request) (*models.User, error)
 
 	token := headerParts[1]
 	if len(token) != 26 {
-		return nil, errors.New("invalid authentication token")
+		return nil, errors.New("authentication token wrong size")
 	}
 
 	// get the user from the tokens table
 	user, err := app.DB.GetUserForToken(token)
 	if err != nil {
-		return nil, errors.New("invalid authentication token")
+		return nil, errors.New("no matching user found")
 	}
 
 	return user, nil
 }
 
 func (app *application) CheckAuthentication(w http.ResponseWriter, r *http.Request) {
+	// validate the token, and get associated user
 	user, err := app.authenticateToken(r)
 	if err != nil {
 		app.invalidCredentials(w)
 		return
 	}
 
-	// valid token
+	// valid user
 	var payload struct {
 		Error   bool   `json:"error"`
 		Message string `json:"message"`
 	}
-
 	payload.Error = false
-	payload.Message = fmt.Sprintf("authenticate user %s", user.Email)
+	payload.Message = fmt.Sprintf("authenticated user %s", user.Email)
 	app.writeJSON(w, http.StatusOK, payload)
+}
+
+func (app *application) VirtualTerminalPaymentSucceeded(w http.ResponseWriter, r *http.Request) {
+	var txnData struct {
+		PaymentAmount   int    `json:"amount"`
+		PaymentCurrency string `json:"currency"`
+		FirstName       string `json:"first_name"`
+		LastName        string `json:"last_name"`
+		Email           string `json:"email"`
+		PaymentIntent   string `json:"payment_intent"`
+		PaymentMethod   string `json:"payment_method"`
+		BankReturnCode  string `json:"bank_return_code"`
+		ExpiryMonth     int    `json:"expiry_month"`
+		ExpiryYear      int    `json:"expiry_year"`
+		LastFour        string `json:"last_four"`
+	}
+
+	err := app.readJSON(w, r, &txnData)
+	if err != nil {
+		app.badRequest(w, r, err)
+		return
+	}
+
+	card := cards.Card{
+		Secret: app.config.stripe.secret,
+		Key:    app.config.stripe.key,
+	}
+
+	pi, err := card.RetrievePaymentIntent(txnData.PaymentIntent)
+	if err != nil {
+		app.badRequest(w, r, err)
+		return
+	}
+
+	pm, err := card.GetPaymentMethod(txnData.PaymentMethod)
+	if err != nil {
+		app.badRequest(w, r, err)
+		return
+	}
+
+	txnData.LastFour = pm.Card.Last4
+	txnData.ExpiryMonth = int(pm.Card.ExpMonth)
+	txnData.ExpiryYear = int(pm.Card.ExpYear)
+
+	txn := models.Transaction{
+		Amount:              txnData.PaymentAmount,
+		Currency:            txnData.PaymentCurrency,
+		LastFour:            txnData.LastFour,
+		ExpiryMonth:         txnData.ExpiryMonth,
+		ExpiryYear:          txnData.ExpiryYear,
+		PaymentIntent:       txnData.PaymentIntent,
+		PaymentMethod:       txnData.PaymentMethod,
+		BankReturnCode:      pi.Charges.Data[0].ID,
+		TransactionStatusID: 2,
+	}
+
+	_, err = app.SaveTransaction(txn)
+	if err != nil {
+		app.badRequest(w, r, err)
+		return
+	}
+
+	app.writeJSON(w, http.StatusOK, txn)
 }

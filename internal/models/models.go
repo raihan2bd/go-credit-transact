@@ -239,7 +239,7 @@ func (m *DBModel) InsertCustomer(c Customer) (int, error) {
 	return int(id), nil
 }
 
-// GetUserByEmail gets user by email
+// GetUserByEmail gets a user by email address
 func (m *DBModel) GetUserByEmail(email string) (User, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
 	defer cancel()
@@ -248,12 +248,11 @@ func (m *DBModel) GetUserByEmail(email string) (User, error) {
 	var u User
 
 	row := m.DB.QueryRowContext(ctx, `
-		select 
+		select
 			id, first_name, last_name, email, password, created_at, updated_at
 		from
 			users
-		where
-			email = ?`, email)
+		where email = ?`, email)
 
 	err := row.Scan(
 		&u.ID,
