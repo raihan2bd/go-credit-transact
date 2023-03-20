@@ -1,3 +1,5 @@
+github.com/alexedwards/scs/mysqlstore v0.0.0-20230305153148-62e546ce9d2d h1:wLgo+Fgmt/1AD+Qe6OL6XEdD64F0Wg9PI0ClyzCDbRc=
+github.com/alexedwards/scs/mysqlstore v0.0.0-20230305153148-62e546ce9d2d/go.mod h1:ShejCOaSJCEjCWjc7YBrgy2xd0Kp+wiyBdzTNQrAGn4=
 github.com/alexedwards/scs/v2 v2.5.1 h1:EhAz3Kb3OSQzD8T+Ub23fKsiuvE0GzbF5Lgn0uTwM3Y=
 github.com/alexedwards/scs/v2 v2.5.1/go.mod h1:ToaROZxyKukJKT/xLcVQAChi5k6+Pn1Gvmdl7h3RRj8=
 github.com/davecgh/go-spew v1.1.0 h1:ZDRjVQ15GmhC3fiQ8ni8+OwkZQO4DARzQgrnXU1Liz8=

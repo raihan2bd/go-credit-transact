@@ -11,3 +11,5 @@ require (
 	github.com/stripe/stripe-go/v72 v72.122.0
 	golang.org/x/crypto v0.0.0-20190308221718-c2843e01d9a2
 )
+
+require github.com/alexedwards/scs/mysqlstore v0.0.0-20230305153148-62e546ce9d2d // indirect
