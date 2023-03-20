@@ -3,7 +3,7 @@
   <div class="col-md-6 offset-md-3">
     <div class="alert alert-danger text-center d-none" id="login-messages"></div>
     <form
-      action=""
+      action="/login"
       method="post"
       name="login_form"
       id="login_form"
@@ -93,7 +93,8 @@
         localStorage.setItem('token', data.authentication_token.token);
         localStorage.setItem('token_expiry', data.authentication_token.expiry);
         showSuccess();
-        location.href = '/';
+        // location.href = '/';
+        document.getElementById('login_form').submit();
       });
   }
 </script>
