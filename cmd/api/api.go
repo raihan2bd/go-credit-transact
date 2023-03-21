@@ -20,11 +20,18 @@ type config struct {
 	db   struct {
 		dsn string
 	}
-
 	stripe struct {
 		secret string
 		key    string
 	}
+	smtp struct {
+		host     string
+		port     int
+		username string
+		password string
+	}
+	secretkey string
+	frontend  string
 }
 
 type application struct {
@@ -54,10 +61,16 @@ func main() {
 	flag.IntVar(&cfg.port, "port", 4001, "Server port to listen on")
 	flag.StringVar(&cfg.env, "env", "development", "Application environment {development|production|maintenance}")
 	flag.StringVar(&cfg.db.dsn, "dsn", "raihan:secret@tcp(localhost:3306)/widgets?parseTime=true&tls=false", "DSN")
+	flag.IntVar(&cfg.smtp.port, "smtpport", 587, "smtp port")
 
 	flag.Parse()
 	cfg.stripe.key = os.Getenv("STRIPE_KEY")
 	cfg.stripe.secret = os.Getenv("STRIPE_SECRET")
+	cfg.smtp.host = os.Getenv("MAIL_HOST")
+	cfg.smtp.username = os.Getenv("MAIL_USERNAME")
+	cfg.smtp.password = os.Getenv("MAIL_PASSWORD")
+	cfg.secretkey = os.Getenv("SECRET_KEY")
+	cfg.frontend = os.Getenv("FRONT_END")
 
 	infoLog := log.New(os.Stdout, "INFO\t", log.Ldate|log.Ltime|log.Lshortfile)
 	errorLog := log.New(os.Stdout, "Error\t", log.Ldate|log.Ltime|log.Lshortfile)
