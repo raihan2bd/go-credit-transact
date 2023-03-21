@@ -282,7 +282,6 @@ func (m *DBModel) Authenticate(email, password string) (int, error) {
 	var hashedPassword string
 
 	row := m.DB.QueryRowContext(ctx, "select id, password from users where email = ?", email)
-
 	err := row.Scan(&id, &hashedPassword)
 	if err != nil {
 		return id, err
@@ -292,8 +291,21 @@ func (m *DBModel) Authenticate(email, password string) (int, error) {
 	if err == bcrypt.ErrMismatchedHashAndPassword {
 		return 0, errors.New("incorrect password")
 	} else if err != nil {
-		return id, err
+		return 0, err
 	}
 
 	return id, nil
+}
+
+func (m *DBModel) UpdatePasswordForUser(u User, hash string) error {
+	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+	defer cancel()
+
+	stmt := `update users set password = ? where id = ?`
+	_, err := m.DB.ExecContext(ctx, stmt, hash, u.ID)
+	if err != nil {
+		return err
+	}
+
+	return nil
 }
