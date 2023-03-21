@@ -1,12 +1,15 @@
 package main
 
 import (
+	"fmt"
 	"net/http"
 	"strconv"
 	"time"
 
 	"github.com/raihan2bd/go-credit-transact/internal/cards"
+	"github.com/raihan2bd/go-credit-transact/internal/encryption"
 	"github.com/raihan2bd/go-credit-transact/internal/models"
+	"github.com/raihan2bd/go-credit-transact/internal/urlsigner"
 
 	"github.com/go-chi/chi/v5"
 )
@@ -191,6 +194,7 @@ func (app *application) VirtualTerminalPaymentSucceeded(w http.ResponseWriter, r
 	http.Redirect(w, r, "/virtual-terminal-receipt", http.StatusSeeOther)
 }
 
+// Receipt displays a receipt
 func (app *application) Receipt(w http.ResponseWriter, r *http.Request) {
 	txn := app.Session.Get(r.Context(), "receipt").(TransactionData)
 	data := make(map[string]interface{})
@@ -203,6 +207,7 @@ func (app *application) Receipt(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
+// VirtualTerminalReceipt displays a receipt
 func (app *application) VirtualTerminalReceipt(w http.ResponseWriter, r *http.Request) {
 	txn := app.Session.Get(r.Context(), "receipt").(TransactionData)
 	data := make(map[string]interface{})
@@ -269,6 +274,7 @@ func (app *application) ChargeOnce(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
+// BronzePlan displays the bronze plan page
 func (app *application) BronzePlan(w http.ResponseWriter, r *http.Request) {
 	widget, err := app.DB.GetWidget(2)
 	if err != nil {
@@ -286,18 +292,21 @@ func (app *application) BronzePlan(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
+// BronzePlanReceipt displays the receipt for bronze plans
 func (app *application) BronzePlanReceipt(w http.ResponseWriter, r *http.Request) {
 	if err := app.renderTemplate(w, r, "receipt-plan", &templateData{}); err != nil {
-		app.errorLog.Println(err)
+		app.errorLog.Print(err)
 	}
 }
 
+// LoginPage displays the login page
 func (app *application) LoginPage(w http.ResponseWriter, r *http.Request) {
 	if err := app.renderTemplate(w, r, "login", &templateData{}); err != nil {
-		app.errorLog.Println(err)
+		app.errorLog.Print(err)
 	}
 }
 
+// PostLoginPage handles the posted login form
 func (app *application) PostLoginPage(w http.ResponseWriter, r *http.Request) {
 	app.Session.RenewToken(r.Context())
 
@@ -323,5 +332,57 @@ func (app *application) PostLoginPage(w http.ResponseWriter, r *http.Request) {
 func (app *application) Logout(w http.ResponseWriter, r *http.Request) {
 	app.Session.Destroy(r.Context())
 	app.Session.RenewToken(r.Context())
+
 	http.Redirect(w, r, "/login", http.StatusSeeOther)
+}
+
+// ForgotPassword shows the forgot password page
+func (app *application) ForgotPassword(w http.ResponseWriter, r *http.Request) {
+	if err := app.renderTemplate(w, r, "forgot-password", &templateData{}); err != nil {
+		app.errorLog.Print(err)
+	}
+}
+
+// ShowResetPassword shows the reset password page (and validates url integrity)
+func (app *application) ShowResetPassword(w http.ResponseWriter, r *http.Request) {
+	email := r.URL.Query().Get("email")
+	theURL := r.RequestURI
+	testURL := fmt.Sprintf("%s%s", app.config.frontend, theURL)
+
+	signer := urlsigner.Signer{
+		Secret: []byte(app.config.secretkey),
+	}
+
+	valid := signer.VerifyToken(testURL)
+
+	if !valid {
+		app.errorLog.Println("Invalid url - tampering detected")
+		return
+	}
+
+	// make sure not expired
+	expired := signer.Expired(testURL, 60)
+	if expired {
+		app.errorLog.Println("Link expired")
+		return
+	}
+
+	encyrptor := encryption.Encryption{
+		Key: []byte(app.config.secretkey),
+	}
+
+	encryptedEmail, err := encyrptor.Encrypt(email)
+	if err != nil {
+		app.errorLog.Println("Encryption failed")
+		return
+	}
+
+	data := make(map[string]interface{})
+	data["email"] = encryptedEmail
+
+	if err := app.renderTemplate(w, r, "reset-password", &templateData{
+		Data: data,
+	}); err != nil {
+		app.errorLog.Print(err)
+	}
 }
