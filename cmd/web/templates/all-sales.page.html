@@ -15,6 +15,7 @@
                 <th>Customer</th>
                 <th>Product</th>
                 <th>Amount</th>
+                <th>Status</th>
             </tr>
         </thead>
         <tbody>
@@ -39,7 +40,7 @@
 
     fetch("{{.API}}/api/admin/all-sales", requestOptions)
     .then(response => response.json())
-    .then(function (data) {     
+    .then(function (data) {        
         if (data) {
             data.forEach(function(i) {
                 let newRow = tbody.insertRow();
@@ -59,6 +60,13 @@
                 newCell = newRow.insertCell();
                 item = document.createTextNode(cur);
                 newCell.appendChild(item);
+
+                newCell = newRow.insertCell();
+                if (i.status_id != 1) {
+                    newCell.innerHTML = `<span class="badge bg-danger">Refunded</span>`;
+                } else {
+                    newCell.innerHTML = `<span class="badge bg-success">Charged</span>`;
+                }
             })
         } else {
             let newRow = tbody.insertRow();
