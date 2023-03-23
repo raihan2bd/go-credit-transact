@@ -772,3 +772,23 @@ func (app *application) EditUser(w http.ResponseWriter, r *http.Request) {
 	resp.Error = false
 	app.writeJSON(w, http.StatusOK, resp)
 }
+
+// DeleteUser deletes a user, and all associated tokens, from the database
+func (app *application) DeleteUser(w http.ResponseWriter, r *http.Request) {
+	id := chi.URLParam(r, "id")
+	userID, _ := strconv.Atoi(id)
+
+	err := app.DB.DeleteUser(userID)
+	if err != nil {
+		app.badRequest(w, r, err)
+		return
+	}
+
+	var resp struct {
+		Error   bool   `json:"error"`
+		Message string `json:"message"`
+	}
+
+	resp.Error = false
+	app.writeJSON(w, http.StatusOK, resp)
+}
