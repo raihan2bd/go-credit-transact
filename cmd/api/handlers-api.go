@@ -557,16 +557,40 @@ func (app *application) AllSales(w http.ResponseWriter, r *http.Request) {
 	app.writeJSON(w, http.StatusOK, resp)
 }
 
+// AllSubscriptions returns all subscriptions as a slice
 func (app *application) AllSubscriptions(w http.ResponseWriter, r *http.Request) {
-	// get all sales from database
+	var payload struct {
+		PageSize    int `json:"page_size"`
+		CurrentPage int `json:"page"`
+	}
 
-	allSales, err := app.DB.GetAllSubscriptions()
+	err := app.readJSON(w, r, &payload)
 	if err != nil {
 		app.badRequest(w, r, err)
 		return
 	}
 
-	app.writeJSON(w, http.StatusOK, allSales)
+	allSales, lastPage, totalRecords, err := app.DB.GetAllSubscriptionsPaginated(payload.PageSize, payload.CurrentPage)
+	if err != nil {
+		app.badRequest(w, r, err)
+		return
+	}
+
+	var resp struct {
+		CurrentPage  int             `json:"current_page"`
+		PageSize     int             `json:"page_size"`
+		LastPage     int             `json:"last_page"`
+		TotalRecords int             `json:"total_records"`
+		Orders       []*models.Order `json:"orders"`
+	}
+
+	resp.CurrentPage = payload.CurrentPage
+	resp.PageSize = payload.PageSize
+	resp.LastPage = lastPage
+	resp.TotalRecords = totalRecords
+	resp.Orders = allSales
+
+	app.writeJSON(w, http.StatusOK, resp)
 }
 
 // GetSale returns one sale as json, by id
