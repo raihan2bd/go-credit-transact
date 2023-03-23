@@ -38,7 +38,7 @@
           </li>
 
           {{if eq .IsAuthenticated 1}}
-          <li class="nav-item dropdown">
+            <li class="nav-item dropdown">
             <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
               Admin
             </a>
@@ -48,24 +48,27 @@
               <li><a class="dropdown-item" href="/admin/all-sales">All Sales</a></li>
               <li><a class="dropdown-item" href="/admin/all-subscriptions">All Subscriptions</a></li>
               <li><hr class="dropdown-divider"></li>
+              <li><a class="dropdown-item" href="/admin/all-users">All Users</a></li>
+              <li><hr class="dropdown-divider"></li>
               <li><a class="dropdown-item" href="/logout">Logout</a></li>
             </ul>
           </li>
           {{end}}
 
         </ul>
+
         {{if eq .IsAuthenticated 1}}
-        <ul class="navbar-nav ms-auto mb-2 mb-lg-0">
-          <li id="login-link" class="nav-item">
-            <a class="nav-link" href="/logout">Logout</a></li>
-          </li>
-        </ul>
+          <ul class="navbar-nav ms-auto mb-2 mb-lg-0">
+            <li id="login-link" class="nav-item">
+              <a class="nav-link" href="/logout">Logout</a></li>
+            </li>
+          </ul>
         {{else}}
-        <ul class="navbar-nav ms-auto mb-2 mb-lg-0">
-          <li id="login-link" class="nav-item">
-            <a class="nav-link" href="/login">Login</a></li>
-          </li>
-        </ul>
+          <ul class="navbar-nav ms-auto mb-2 mb-lg-0">
+            <li id="login-link" class="nav-item">
+              <a class="nav-link" href="/login">Login</a></li>
+            </li>
+          </ul>
         {{end}}
       </div>
     </div>
@@ -82,6 +85,36 @@
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.1/dist/js/bootstrap.bundle.min.js" integrity="sha384-gtEjrD/SeCtmISkJkNUaaKMoLD0//ElJ19smozuHV6z3Iehds+3Ulb9Bn9Plx0x4" crossorigin="anonymous"></script>
 
   <script>
+
+  {{if eq .IsAuthenticated 1}}
+  let socket;
+  
+  document.addEventListener("DOMContentLoaded", function() {
+    socket = new WebSocket("ws://localhost:4000/ws")
+
+    socket.onopen = () => {
+      console.log("Successfully connected to websockets");
+    }
+
+    socket.onclose = event => { };
+
+    socket.onerror = error => { };
+
+    socket.onmessage = msg => {
+      let data = JSON.parse(msg.data);
+
+      switch (data.action) {
+        case "logout":
+          if (data.user_id === {{.UserID}}) {
+            logout();
+          }
+          break;
+        default:
+      }
+    }
+
+  })
+  {{end}}
 
   function logout() {
     localStorage.removeItem("token");
