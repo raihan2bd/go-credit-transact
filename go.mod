@@ -14,7 +14,10 @@ require (
 	golang.org/x/crypto v0.0.0-20190308221718-c2843e01d9a2
 )
 
-require golang.org/x/sys v0.0.0-20200323222414-85ca7c5b95cd // indirect
+require (
+	github.com/gorilla/websocket v1.5.0 // indirect
+	golang.org/x/sys v0.0.0-20200323222414-85ca7c5b95cd // indirect
+)
 
 require (
 	github.com/alexedwards/scs/mysqlstore v0.0.0-20230305153148-62e546ce9d2d
