@@ -277,6 +277,7 @@ func (m *DBModel) GetUserByEmail(email string) (User, error) {
 	return u, nil
 }
 
+// Authenticate attempts to log a user in by comparing supplied password with password hash
 func (m *DBModel) Authenticate(email, password string) (int, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
 	defer cancel()
@@ -300,6 +301,7 @@ func (m *DBModel) Authenticate(email, password string) (int, error) {
 	return id, nil
 }
 
+// UpdatePasswordForUser updates the password hash for a given user, by user id
 func (m *DBModel) UpdatePasswordForUser(u User, hash string) error {
 	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
 	defer cancel()
@@ -313,6 +315,7 @@ func (m *DBModel) UpdatePasswordForUser(u User, hash string) error {
 	return nil
 }
 
+// GetAllOrders returns a slice of all orders
 func (m *DBModel) GetAllOrders() ([]*Order, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
 	defer cancel()
@@ -469,6 +472,7 @@ func (m *DBModel) GetAllOrdersPaginated(pageSize, page int) ([]*Order, int, int,
 	return orders, lastPage, totalRecords, nil
 }
 
+// GetAllSubscriptions returns a slice of all subscriptions
 func (m *DBModel) GetAllSubscriptions() ([]*Order, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
 	defer cancel()
@@ -681,6 +685,7 @@ func (m *DBModel) GetOrderByID(id int) (Order, error) {
 	return o, nil
 }
 
+// UpdateOrderStatus updates the status of order to supplied statusID by id
 func (m *DBModel) UpdateOrderStatus(id, statusID int) error {
 	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
 	defer cancel()
@@ -693,4 +698,137 @@ func (m *DBModel) UpdateOrderStatus(id, statusID int) error {
 	}
 
 	return nil
+}
+
+func (m *DBModel) GetAllUsers() ([]*User, error) {
+	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+	defer cancel()
+
+	var users []*User
+
+	query := `
+		select
+			id, last_name, first_name, email, created_at, updated_at
+		from
+			users
+		order by
+			last_name, first_name
+	`
+
+	rows, err := m.DB.QueryContext(ctx, query)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	for rows.Next() {
+		var u User
+		err = rows.Scan(
+			&u.ID,
+			&u.LastName,
+			&u.FirstName,
+			&u.Email,
+			&u.CreatedAt,
+			&u.UpdatedAt,
+		)
+		if err != nil {
+			return nil, err
+		}
+		users = append(users, &u)
+	}
+
+	return users, nil
+}
+
+func (m *DBModel) GetOneUser(id int) (User, error) {
+	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+	defer cancel()
+
+	var u User
+
+	query := `
+		select
+			id, last_name, first_name, email, created_at, updated_at
+		from
+			users
+		where id = ?`
+
+	row := m.DB.QueryRowContext(ctx, query, id)
+
+	err := row.Scan(
+		&u.ID,
+		&u.LastName,
+		&u.FirstName,
+		&u.Email,
+		&u.CreatedAt,
+		&u.UpdatedAt,
+	)
+	if err != nil {
+		return u, err
+	}
+	return u, nil
+}
+
+func (m *DBModel) EditUser(u User) error {
+	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+	defer cancel()
+
+	stmt := `
+		update users set
+			first_name = ?,
+			last_name = ?,
+			email = ?,
+			updated_at = ?
+		where
+			id = ?`
+
+	_, err := m.DB.ExecContext(ctx, stmt,
+		u.FirstName,
+		u.LastName,
+		u.Email,
+		time.Now(),
+		u.ID,
+	)
+
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func (m *DBModel) AddUser(u User, hash string) error {
+	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+	defer cancel()
+
+	stmt := `
+		insert into users (first_name, last_name, email, password, created_at, updated_at
+		values (?, ?, ?, ?, ?, ?)`
+
+	_, err := m.DB.ExecContext(ctx, stmt,
+		u.FirstName,
+		u.LastName,
+		u.Email,
+		hash,
+		time.Now(),
+		time.Now(),
+	)
+
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func (m *DBModel) DeleteUser(id int) error {
+	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+	defer cancel()
+
+	stmt := `delete from users where id = ?`
+
+	_, err := m.DB.ExecContext(ctx, stmt, id)
+	if err != nil {
+		return err
+	}
+	return nil
+
 }

@@ -433,3 +433,17 @@ func (app *application) ShowSubscription(w http.ResponseWriter, r *http.Request)
 		app.errorLog.Print(err)
 	}
 }
+
+// AllUsers shows the all users page
+func (app *application) AllUsers(w http.ResponseWriter, r *http.Request) {
+	if err := app.renderTemplate(w, r, "all-users", &templateData{}); err != nil {
+		app.errorLog.Print(err)
+	}
+}
+
+// OneUser shows one admin user for add/edit/delete
+func (app *application) OneUser(w http.ResponseWriter, r *http.Request) {
+	if err := app.renderTemplate(w, r, "one-user", &templateData{}); err != nil {
+		app.errorLog.Print(err)
+	}
+}
