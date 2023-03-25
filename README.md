@@ -58,7 +58,7 @@ make start
 ```
 or 
 ```sh
-go run cmd/web/* cmd/api/* cmd/micro/*
+go run cmd/web/* cmd/api/* cmd/micro/invoice*
 ```
 
 - Then you can see this project live on your browser by this link http://localhost:8080 or your given the port nuber you set for the project.
