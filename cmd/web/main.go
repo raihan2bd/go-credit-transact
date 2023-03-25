@@ -10,11 +10,12 @@ import (
 	"os"
 	"time"
 
-	"github.com/alexedwards/scs/mysqlstore"
-	"github.com/alexedwards/scs/v2"
 	"github.com/joho/godotenv"
 	"github.com/raihan2bd/go-credit-transact/internal/driver"
 	"github.com/raihan2bd/go-credit-transact/internal/models"
+
+	"github.com/alexedwards/scs/mysqlstore"
+	"github.com/alexedwards/scs/v2"
 )
 
 const version = "1.0.0"
@@ -29,7 +30,6 @@ type config struct {
 	db   struct {
 		dsn string
 	}
-
 	stripe struct {
 		secret string
 		key    string
@@ -58,7 +58,8 @@ func (app *application) serve() error {
 		WriteTimeout:      5 * time.Second,
 	}
 
-	app.infoLog.Printf("Starting HTTP server in %s mode on port %d", app.config.env, app.config.port)
+	app.infoLog.Printf("Starting HTTP server in %s mode on port %d\n", app.config.env, app.config.port)
+
 	return srv.ListenAndServe()
 }
 
@@ -79,8 +80,8 @@ func main() {
 	cfg.secretkey = os.Getenv("SECRET_KEY")
 	cfg.frontend = os.Getenv("FRONT_END")
 
-	infoLog := log.New(os.Stdout, "INFO\t", log.Ldate|log.Ltime|log.Lshortfile)
-	errorLog := log.New(os.Stdout, "Error\t", log.Ldate|log.Ltime|log.Lshortfile)
+	infoLog := log.New(os.Stdout, "INFO\t", log.Ldate|log.Ltime)
+	errorLog := log.New(os.Stdout, "ERROR\t", log.Ldate|log.Ltime|log.Lshortfile)
 
 	conn, err := driver.OpenDB(cfg.db.dsn)
 	if err != nil {
@@ -88,7 +89,7 @@ func main() {
 	}
 	defer conn.Close()
 
-	// setup session
+	// set up session
 	session = scs.New()
 	session.Lifetime = 24 * time.Hour
 	session.Store = mysqlstore.New(conn)
@@ -105,10 +106,11 @@ func main() {
 		Session:       session,
 	}
 
+	go app.ListenToWsChannel()
+
 	err = app.serve()
 	if err != nil {
 		app.errorLog.Println(err)
 		log.Fatal(err)
 	}
-
 }
