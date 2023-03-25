@@ -52,9 +52,7 @@ function paginator(pages, curPage) {
     for (var j = 0; j < pageBtns.length; j++) {
         pageBtns[j].addEventListener("click", function(evt){
             let desiredPage = evt.target.getAttribute("data-page");
-            console.log("clicked, and data-page is", desiredPage);
             if ((desiredPage > 0) && (desiredPage <= pages + 1)) {
-                console.log("would go to page", desiredPage);
                 updateTable(pageSize, desiredPage);
             }
         })
@@ -70,8 +68,6 @@ function updateTable(ps, cp) {
         page_size: parseInt(ps, 10),
         page: parseInt(cp, 10),
     }
-
-    console.log("page size:", ps, "page", cp);
 
     const requestOptions = {
         method: 'post',

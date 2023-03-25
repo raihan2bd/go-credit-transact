@@ -43,5 +43,5 @@ func (s *Signer) Expired(token string, minutesUntilExpire int) bool {
 	crypt := goalone.New(s.Secret, goalone.Timestamp)
 	ts := crypt.Parse([]byte(token))
 
-	return time.Since(ts.Timestamp) > time.Duration(minutesUntilExpire)*time.Minute
+	return time.Since(ts.Timestamp) > time.Duration(minutesUntilExpire) * time.Minute
 }

@@ -119,6 +119,39 @@ func (c *Card) CreateCustomer(pm, email string) (*stripe.Customer, string, error
 	return cust, "", nil
 }
 
+// Refund refunds an amount for a paymentIntent
+func (c *Card) Refund(pi string, amount int) error {
+	stripe.Key = c.Secret
+	amountToRefund := int64(amount)
+
+	refundParams := &stripe.RefundParams{
+		Amount:        &amountToRefund,
+		PaymentIntent: &pi,
+	}
+
+	_, err := refund.New(refundParams)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+// CancelSubscription cancels a subscription, by subscription id
+func (c *Card) CancelSubscription(subID string) error {
+	stripe.Key = c.Secret
+
+	params := &stripe.SubscriptionParams{
+		CancelAtPeriodEnd: stripe.Bool(true),
+	}
+
+	_, err := sub.Update(subID, params)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
 // cardErrorMessage returns human readable versions of card error messages
 func cardErrorMessage(code stripe.ErrorCode) string {
 	var msg = ""
@@ -143,36 +176,4 @@ func cardErrorMessage(code stripe.ErrorCode) string {
 		msg = "Your card was declined"
 	}
 	return msg
-}
-
-// Refund refunds an amount for a paymentIntent
-func (c *Card) Refund(pi string, amount int) error {
-	stripe.Key = c.Secret
-	amountToRefund := int64(amount)
-
-	refundParams := &stripe.RefundParams{
-		Amount:        &amountToRefund,
-		PaymentIntent: &pi,
-	}
-
-	_, err := refund.New(refundParams)
-	if err != nil {
-		return err
-	}
-
-	return nil
-}
-
-func (c *Card) CancelSubscription(subID string) error {
-	stripe.Key = c.Secret
-	params := &stripe.SubscriptionParams{
-		CancelAtPeriodEnd: stripe.Bool(true),
-	}
-
-	_, err := sub.Update(subID, params)
-	if err != nil {
-		return err
-	}
-
-	return nil
 }
